@@ -10,6 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Session {
+  id String @id @default(cuid())
+  sessionToken String @unique@map("session_token")
+  expires DateTime
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -26,6 +32,7 @@ model Game {
   members     Member[] @relation("Members")
   host        Member   @relation("Host", fields: [hostId], references: [id])
   hostId      Int      @unique
+  rounds      Round[]
 }
 
 model Member {
@@ -39,4 +46,41 @@ model Member {
   game      Game     @relation("Members", fields: [gameId], references: [id])
   gameId    Int
   hosting   Game?    @relation("Host")
+  leading   Round[]
+  guesses   Guess[]
+}
+
+model Round {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  category  String
+  game      Game      @relation(fields: [roundId], references: [id])
+  roundId   Int
+  leader    Member    @relation(fields: [leaderId], references: [id])
+  leaderId  Int
+  subjects  Subject[]
+}
+
+model Subject {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  name        String
+  score       Int
+  artwork     String
+  description String
+  round       Round    @relation(fields: [roundId], references: [id])
+  roundId     Int
+  guesses     Guess[]
+}
+
+model Guess {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  name      String?
+  score     Int
+  delta     Int
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  subjectId Int
+  member    Member   @relation(fields: [memberId], references: [id])
+  memberId  Int
 }
